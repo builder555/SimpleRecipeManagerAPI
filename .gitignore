@@ -1,0 +1,7 @@
+.idea
+.pytest_cache
+.venv
+.DS_Store
+ingredients.json
+recipes.json
+Pipfile.lock

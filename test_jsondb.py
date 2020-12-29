@@ -18,7 +18,7 @@ class TestStorage():
             prim = Storage(collection)
             rs = prim.read()
         assert rs == fake_data
-        assert Stub(open_stub).called_with(f'{collection}.txt', 'r')
+        assert Stub(open_stub).called_with(f'{collection}.json', 'r')
 
     @pytest.mark.parametrize('Storage,input_data,expected_data', [
         (PrimitiveStorage, ['a','b', 'c'], ['a', 'b', 'c']), 
@@ -30,7 +30,7 @@ class TestStorage():
         mocked_open = mock_open()
         with mock.patch('builtins.open', mocked_open) as open_stub:
             Storage(collection).create(input_data)
-        assert Stub(open_stub).called_with(f'{collection}.txt', 'w')
+        assert Stub(open_stub).called_with(f'{collection}.json', 'w')
         assert Stub(jdump_stub).called_with(expected_data, mocked_open())
 
     @mock.patch('jsondb.json.dump')

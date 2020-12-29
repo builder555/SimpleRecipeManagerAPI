@@ -5,12 +5,12 @@ class BaseStorage():
         self.__db = db_name
     def read(self):
         try:
-            with open(f'{self.__db}.txt', 'r') as f:
+            with open(f'{self.__db}.json', 'r') as f:
                 return json.load(f)
         except Exception as e:
             return []
     def write(self, data):
-        with open(f'{self.__db}.txt', 'w') as f:
+        with open(f'{self.__db}.json', 'w') as f:
             json.dump(data, f)
 
 class PrimitiveStorage(BaseStorage):

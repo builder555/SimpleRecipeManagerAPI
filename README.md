@@ -15,5 +15,8 @@ A very basic recipe manager API.
 
 You may now access swagger at localhost:5000.
 
+Should look like this:
+
+![Swagger Screenshot](https://raw.githubusercontent.com/andreixk/SimpleRecipeManagerAPI/main/screenshot.png)
 
 It is built using [FastApi](https://fastapi.tiangolo.com/)

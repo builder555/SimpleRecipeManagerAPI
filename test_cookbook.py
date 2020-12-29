@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from fastapi.testclient import TestClient
 from unittest import mock
@@ -90,6 +92,7 @@ class TestRecipeModel:
         assert recipe.ingredients == [i.strip() for i in good_recipe['ingredients']]
         assert recipe.tags == [t.strip() for t in good_recipe['tags']]
 
+
 class TestRecipeRoutes:
     @mock.patch('cookbook.ObjectStorage')
     def test_can_fetch_recipes(self, db_stub):
@@ -104,6 +107,25 @@ class TestRecipeRoutes:
         assert response.status_code == HTTP_SUCCESS
         assert response.json() == expected_recipes
         assert Stub(db_stub).called_with('recipes')
+
+
+    @mock.patch('cookbook.ObjectStorage')
+    def test_limit_number_of_returned_recipes(self, db_stub):
+        expected_recipes = [
+            {'url': 'abcdef', 'name': '111111', 'ingredients': [], 'tags': []},
+            {'url': 'abcdef', 'name': '222222', 'ingredients': [], 'tags': []},
+            {'url': 'abcdef', 'name': '333333', 'ingredients': [], 'tags': []},
+            {'url': 'abcdef', 'name': '444444', 'ingredients': [], 'tags': []},
+            {'url': 'abcdef', 'name': '555555', 'ingredients': [], 'tags': []},
+            {'url': 'abcdef', 'name': '666666', 'ingredients': [], 'tags': []},
+            {'url': 'abcdef', 'name': '777777', 'ingredients': [], 'tags': []},
+        ]
+        db_stub.return_value = fake_db_with_read(expected_recipes)
+        max_recipes = 5
+        with mock.patch.dict(os.environ, {'COOKBOOK_PAGE_LIMIT': str(max_recipes)}):
+            response = client.get('/recipes')
+
+        assert response.json() == expected_recipes[:max_recipes]
 
     @mock.patch('cookbook.PrimitiveStorage')
     def test_can_fetch_all_ingredients_in_lower_case(self, db_stub):
@@ -135,7 +157,6 @@ class TestRecipeRoutes:
         db_stub.return_value = fake_db_with_read([])
         response = client.post('/recipes', json=new_recipe)
 
-        assert response.status_code == HTTP_SUCCESS
         assert Stub(db_stub).has_call_with('ingredients')
         assert Stub(db_stub().create).has_call_with(new_ingredients)
 
@@ -169,10 +190,26 @@ class TestRecipeRoutes:
             {'url': 'abcdefg', 'name': 'Cookies', 'ingredients': [], 'tags': []},
         ]
         db_stub.return_value = fake_db_with_read(all_recipes)
-        response = client.get('/recipes/search', params={'name':'cookie'})
-        assert response.status_code == HTTP_SUCCESS
+        response = client.get('/recipes/search', params={'name': 'cookie'})
         assert response.json() == all_recipes[-1:]
 
-        response = client.get('/recipes/search', params={'name':'roast'})
-        assert response.status_code == HTTP_SUCCESS
+        response = client.get('/recipes/search', params={'name': 'roast'})
         assert response.json() == all_recipes[2:5]
+
+    @mock.patch('cookbook.ObjectStorage')
+    def test_limit_number_of_returned_recipes_when_searching(self, db_stub):
+        expected_recipes = [
+            {'url': 'abcdef', 'name': '111111', 'ingredients': [], 'tags': []},
+            {'url': 'abcdef', 'name': '222222', 'ingredients': [], 'tags': []},
+            {'url': 'abcdef', 'name': '333333', 'ingredients': [], 'tags': []},
+            {'url': 'abcdef', 'name': '444444', 'ingredients': [], 'tags': []},
+            {'url': 'abcdef', 'name': '555555', 'ingredients': [], 'tags': []},
+            {'url': 'abcdef', 'name': '666666', 'ingredients': [], 'tags': []},
+            {'url': 'abcdef', 'name': '777777', 'ingredients': [], 'tags': []},
+        ]
+        db_stub.return_value = fake_db_with_read(expected_recipes)
+        max_recipes = 5
+        with mock.patch.dict(os.environ, {'COOKBOOK_PAGE_LIMIT': str(max_recipes)}):
+            response = client.get('/recipes/search')
+
+        assert response.json() == expected_recipes[:max_recipes]

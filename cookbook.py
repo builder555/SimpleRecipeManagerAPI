@@ -5,6 +5,7 @@ from copy import deepcopy
 from pydantic import BaseModel, Field, PrivateAttr, validator
 from jsondb import ObjectStorage, PrimitiveStorage
 import re
+import os
 
 app = FastAPI()
 
@@ -21,6 +22,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class Config():
+    def __init__(self):
+        default_results = '9'
+        self.__results_per_page = int(os.environ.get('COOKBOOK_PAGE_LIMIT', default_results))
+    @property
+    def results_per_page(self):
+        return self.__results_per_page
 
 class RecipeModel(BaseModel):
     url: str = Field(min_length=5)
@@ -84,13 +92,16 @@ def save_ingredients(new_entries):
 
 @app.get('/recipes', response_model=List[RecipeModel])
 def get_a_page_of_recipes():
-    return get_recipes()
+    results_per_page = Config().results_per_page
+    return get_recipes()[:results_per_page]
 
 
 @app.get('/recipes/search', response_model=List[RecipeModel])
 def search_recipes(ingredients: List[str] = Query([]), name: str = ''):
     recipes_matching_name = filter_recipes_by_name(get_recipes(), name)
-    return sort_recipes_by_ingredients(recipes_matching_name, ingredients)
+    sorted_recipes = sort_recipes_by_ingredients(recipes_matching_name, ingredients)
+    results_per_page = Config().results_per_page
+    return sorted_recipes[:results_per_page]
 
 
 @app.post('/recipes')

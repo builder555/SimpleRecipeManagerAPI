@@ -1,0 +1,20 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = "*"
+uvicorn = "*"
+requests = "*"
+
+[dev-packages]
+pytest = "*"
+pytest-watch = "*"
+mutmut = "*"
+
+[requires]
+python_version = "3"
+
+[scripts]
+test = "pytest -v"

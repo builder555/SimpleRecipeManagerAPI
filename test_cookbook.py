@@ -106,13 +106,13 @@ class TestRecipeRoutes:
         assert Stub(db_stub).called_with('recipes')
 
     @mock.patch('cookbook.PrimitiveStorage')
-    def test_can_fetch_all_ingredients(self, db_stub):
-        expected_ingredients = ['d', 'a', 'b', 'c']
+    def test_can_fetch_all_ingredients_in_lower_case(self, db_stub):
+        expected_ingredients = ['D', 'Aaa', 'BBBB', 'ccC', 'ddddd']
         db_stub.return_value = fake_db_with_read(expected_ingredients)
         response = client.get('/ingredients')
 
         assert response.status_code == HTTP_SUCCESS
-        assert response.json() == expected_ingredients
+        assert response.json() == [i.lower() for i in expected_ingredients]
         assert Stub(db_stub).called_with('ingredients')
 
     @mock.patch('cookbook.ObjectStorage')

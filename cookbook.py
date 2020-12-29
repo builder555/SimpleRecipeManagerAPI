@@ -63,7 +63,8 @@ def search_recipes(ingredients):
 
 
 def get_ingredients():
-    return PrimitiveStorage('ingredients').read()
+    ingredients = PrimitiveStorage('ingredients').read()
+    return [i.lower() for i in ingredients]
 
 
 def save_ingredients(new_entries):

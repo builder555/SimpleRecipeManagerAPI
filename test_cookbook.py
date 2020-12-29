@@ -156,3 +156,23 @@ class TestRecipeRoutes:
 
         assert response.status_code == HTTP_SUCCESS
         assert response.json() == expected_order
+
+    @mock.patch('cookbook.ObjectStorage')
+    def test_search_recipes_by_word_in_title(self, db_stub):
+        all_recipes = [
+            {'url': 'abcdefg', 'name': 'Garlic Bread', 'ingredients': [], 'tags': []},
+            {'url': 'abcdefg', 'name': 'Omelet', 'ingredients': [], 'tags': []},
+            {'url': 'abcdefg', 'name': 'Turkey Roast', 'ingredients': [], 'tags': []},
+            {'url': 'abcdefg', 'name': 'Roast Beef', 'ingredients': [], 'tags': []},
+            {'url': 'abcdefg', 'name': 'Roasted Pineapple', 'ingredients': [], 'tags': []},
+            {'url': 'abcdefg', 'name': 'Preroasted apples', 'ingredients': [], 'tags': []},
+            {'url': 'abcdefg', 'name': 'Cookies', 'ingredients': [], 'tags': []},
+        ]
+        db_stub.return_value = fake_db_with_read(all_recipes)
+        response = client.get('/recipes/search', params={'name':'cookie'})
+        assert response.status_code == HTTP_SUCCESS
+        assert response.json() == all_recipes[-1:]
+
+        response = client.get('/recipes/search', params={'name':'roast'})
+        assert response.status_code == HTTP_SUCCESS
+        assert response.json() == all_recipes[2:5]

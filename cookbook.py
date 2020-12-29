@@ -1,8 +1,10 @@
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
+from copy import deepcopy
 from pydantic import BaseModel, Field, PrivateAttr, validator
 from jsondb import ObjectStorage, PrimitiveStorage
+import re
 
 app = FastAPI()
 
@@ -28,7 +30,7 @@ class RecipeModel(BaseModel):
     __unmatched_ingredients: float = PrivateAttr()
 
     @property
-    def match(self):
+    def missing_ingredients(self):
         return self.__unmatched_ingredients
 
     @validator('ingredients', 'tags')
@@ -54,13 +56,22 @@ def save_recipe(recipe):
     ObjectStorage('recipes').create(recipe)
 
 
-def search_by_ingredients(ingredients):
-    all_recp = get_recipes()
-    ingredient_set = set([i.lower() for i in ingredients])
-    for r in all_recp:
-        r.compare_ingredients(ingredient_set)
-    return sorted(all_recp, key=lambda r: r.match)
+def filter_recipes_by_name(recipes, name):
+    recipes_matching_name = []
+    requested_name = r"(\s|^)" + name.lower()
+    for r in recipes:
+        recipe_contains_searched_word = re.search(requested_name, r.name, re.IGNORECASE)
+        if recipe_contains_searched_word:
+            recipes_matching_name.append(r)
+    return recipes_matching_name
 
+
+def sort_recipes_by_ingredients(recipes, ingredients):
+    ingredient_set = set([i.lower() for i in ingredients])
+    recipes_copy = deepcopy(recipes)
+    for r in recipes_copy:
+        r.compare_ingredients(ingredient_set)
+    return sorted(recipes_copy, key=lambda r: r.missing_ingredients)
 
 def get_ingredients():
     ingredients = PrimitiveStorage('ingredients').read()
@@ -77,8 +88,9 @@ def get_a_page_of_recipes():
 
 
 @app.get('/recipes/search')
-def search_recipes_by_ingredient(ingredients: List[str] = Query([])):
-    return search_by_ingredients(ingredients)
+def search_recipes(ingredients: List[str] = Query([]), name: str = ''):
+    recipes_matching_name = filter_recipes_by_name(get_recipes(), name)
+    return sort_recipes_by_ingredients(recipes_matching_name, ingredients)
 
 
 @app.post('/recipes')

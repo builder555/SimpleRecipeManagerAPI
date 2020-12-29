@@ -54,7 +54,7 @@ def save_recipe(recipe):
     ObjectStorage('recipes').create(recipe)
 
 
-def search_recipes(ingredients):
+def search_by_ingredients(ingredients):
     all_recp = get_recipes()
     ingredient_set = set([i.lower() for i in ingredients])
     for r in all_recp:
@@ -78,7 +78,7 @@ def get_a_page_of_recipes():
 
 @app.get('/recipes/search')
 def search_recipes_by_ingredient(ingredients: List[str] = Query([])):
-    return search_recipes(ingredients)
+    return search_by_ingredients(ingredients)
 
 
 @app.post('/recipes')

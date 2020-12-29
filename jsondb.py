@@ -3,10 +3,10 @@ import traceback
 class BaseStorage():
     def __init__(self, db_name):
         self.__db = db_name
-    def read(self):
+    def read(self, start=0, end=None):
         try:
             with open(f'{self.__db}.json', 'r') as f:
-                return json.load(f)
+                return json.load(f)[start:end]
         except Exception as e:
             return []
     def write(self, data):

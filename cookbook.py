@@ -59,19 +59,19 @@ def save_recipe(recipe):
 def filter_recipes_by_name(recipes, name):
     recipes_matching_name = []
     requested_name = r"(\s|^)" + name.lower()
-    for r in recipes:
-        recipe_contains_searched_word = re.search(requested_name, r.name, re.IGNORECASE)
+    for recipe in recipes:
+        recipe_contains_searched_word = re.search(requested_name, recipe.name, re.IGNORECASE)
         if recipe_contains_searched_word:
-            recipes_matching_name.append(r)
+            recipes_matching_name.append(deepcopy(recipe))
     return recipes_matching_name
 
 
 def sort_recipes_by_ingredients(recipes, ingredients):
     ingredient_set = set([i.lower() for i in ingredients])
-    recipes_copy = deepcopy(recipes)
-    for r in recipes_copy:
+    local_recipes = deepcopy(recipes)
+    for r in local_recipes:
         r.compare_ingredients(ingredient_set)
-    return sorted(recipes_copy, key=lambda r: r.missing_ingredients)
+    return sorted(local_recipes, key=lambda r: r.missing_ingredients)
 
 def get_ingredients():
     ingredients = PrimitiveStorage('ingredients').read()
@@ -87,7 +87,7 @@ def get_a_page_of_recipes():
     return get_recipes()
 
 
-@app.get('/recipes/search')
+@app.get('/recipes/search', response_model=List[RecipeModel])
 def search_recipes(ingredients: List[str] = Query([]), name: str = ''):
     recipes_matching_name = filter_recipes_by_name(get_recipes(), name)
     return sort_recipes_by_ingredients(recipes_matching_name, ingredients)
